@@ -11,8 +11,8 @@ from vi.config import Config, dataclass, deserialize
 @dataclass
 class FlockingConfig(Config):
     alignment_weight: float = 0.5
-    cohesion_weight: float = 0.5
-    separation_weight: float = 0.5
+    cohesion_weight: float = 0.005
+    separation_weight: float = 0.25
 
     delta_time: float = 3
 
@@ -28,32 +28,49 @@ class Bird(Agent):
     def change_position(self):
         # Pac-man-style teleport to the other end of the screen when trying to escape
         self.there_is_no_escape()
-
+        
         self.direction = self.move.normalize()
-        self.velocity = 1
+        self.velocity = 2
 
         neighborhood = self.in_proximity_accuracy()
         num_neighbors = self.in_proximity_accuracy().count()
 
         if num_neighbors > 0:
-            dirs_total = self.direction.copy()
+            total_dirs = self.direction.copy()
+            total_separation = pg.Vector2(0, 0)
+            total_pos = pg.Vector2(0, 0)
             for agent, distance in neighborhood:
                 # Calculate sum of direction for alignment
-                dirs_total += agent.direction
+                total_dirs += agent.direction
 
-                # Calculate difference in pos to all boids for separation
+                # Calculate difference in position to neighboring boids
+                pos_diff = self.pos - agent.pos
+                total_separation += pos_diff
+
+                # Calculate total position of neighboring boids
+                total_pos += agent.pos
 
             # Calculate average direction for alignment
-            avg_dir = dirs_total / num_neighbors
+            avg_dir = total_dirs / num_neighbors
             avg_dir = avg_dir.normalize()
-
+            
             # alignment = avg_dir - self.direction
 
-            self.move = self.direction + avg_dir
+            # Calculate average difference in position for separation
+            avg_separation_dir = total_separation / num_neighbors
+            avg_separation_dir = avg_separation_dir.normalize()
+
+            # Calculate average position of neighbors & cohesion force
+            avg_pos = total_pos / num_neighbors
+            cohesion_force = avg_pos - self.pos
+            cohesion = cohesion_force - self.direction
+
+            
+            self.move = self.direction + (FlockingConfig().alignment_weight * avg_dir) + (FlockingConfig().separation_weight * avg_separation_dir) + (FlockingConfig().cohesion_weight * cohesion) 
             self.move = self.move.normalize()
 
 
-        self.pos += self.move
+        self.pos += self.move * self.velocity
 
 
 
@@ -92,7 +109,7 @@ class FlockingLive(Simulation):
                     self.selection = Selection.SEPARATION
 
         a, c, s = self.config.weights()
-        # print(f"A: {a:.1f} - C: {c:.1f} - S: {s:.1f}")
+        print(f"A: {a:.3f} - C: {c:.3f} - S: {s:.3f}")
 
 
 (
@@ -104,6 +121,6 @@ class FlockingLive(Simulation):
             seed=1,
         )
     )
-    .batch_spawn_agents(25, Bird, images=["PCI-Nexus/assignment0/images/bird.png"])
+    .batch_spawn_agents(80, Bird, images=["PCI-Nexus/assignment0/images/bird.png"])
     .run()
 )
