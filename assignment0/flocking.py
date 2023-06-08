@@ -11,7 +11,7 @@ from vi.config import Config, dataclass, deserialize
 @dataclass
 class FlockingConfig(Config):
     alignment_weight: float = 0.5
-    cohesion_weight: float = 0.005
+    cohesion_weight: float = 0.008
     separation_weight: float = 0.25
 
     delta_time: float = 3
@@ -117,7 +117,7 @@ class FlockingLive(Simulation):
         FlockingConfig(
             image_rotation=True,
             movement_speed=1,
-            radius=100,
+            radius=75,
             seed=1,
         )
     )
