@@ -121,6 +121,6 @@ class FlockingLive(Simulation):
             seed=1,
         )
     )
-    .batch_spawn_agents(80, Bird, images=["PCI-Nexus/assignment0/images/bird.png"])
+    .batch_spawn_agents(80, Bird, images=["PCI-Nexus/images/bird.png"])
     .run()
 )
