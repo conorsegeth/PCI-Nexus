@@ -20,15 +20,17 @@ class Cockroach(Agent):
         self.left_on_tick = float('inf')
     
     def _calculate_join_probability(self, n):
-        a = 1.2
-        prob = 0.03 + 0.45 * (1 - math.e**(-a * n))
+        a = 0.03
+        b = 0.48
+        c = 0.64
+        prob = a + b * (1 - math.e**(-c * n))
         # print(prob)
         return prob
     
     def _calculate_leave_probability(self, n):
-        a = 0.82
-        b = 2.1
-        prob = a * math.e**(-b * n) + 0.03
+        a = 0.85
+        b = 1
+        prob = a * math.e**(-b * n) + 0.0001
         # print(prob)
         return prob
 
@@ -86,7 +88,7 @@ class Cockroach(Agent):
         elif self.pos.y + (self.direction.y * 5) > self._area.bottom:
             self.direction.y *= -1
 
-        if random.random() < 0.001:
+        if random.random() < 0.005:
             self.direction = Vector2(random.uniform(-1, 1), random.uniform(-1, 1))
             self.direction = self.direction.normalize()
 
@@ -97,25 +99,27 @@ class Cockroach(Agent):
 config = Config()
 x, y = config.window.as_tuple()
 
-site = Image.open('images/circle.png')
-site = site.resize((150,150))
-site.save('images/circle_resized.png')
+site = Image.open('PCI-Nexus/images/circle.png')
+site = site.resize((200,200))
+site.save('PCI-Nexus/images/circle_resized.png')
 
-site = Image.open('images/circle.png')
-site = site.resize((150, 150))
-site.save('images/circle_resized2.png')
+site = Image.open('PCI-Nexus/images/circle.png')
+site = site.resize((100,100))
+site.save('PCI-Nexus/images/circle_resized2.png')
+
 
 (
     Simulation(
         Config(
             image_rotation=False,
             movement_speed=1.35,
-            radius=50
+            radius=50,
+            fps_limit=600,
         )
     )
-    .spawn_site("images/circle_resized.png", 250.5, y // 2)
-    .spawn_site("images/circle_resized2.png", 500, y // 2)
-    .batch_spawn_agents(50, Cockroach, ["images/white.png", "images/red.png"])
+    .spawn_site("PCI-Nexus/images/circle_resized.png", 250, y // 2)
+    .spawn_site("PCI-Nexus/images/circle_resized.png", 500, y // 2)
+    .batch_spawn_agents(80, Cockroach, ["PCI-Nexus/images/white.png", "PCI-Nexus/images/red.png"])
     .run()
 )
 
