@@ -20,14 +20,14 @@ class Cockroach(Agent):
         self.left_on_tick = float('inf')
     
     def _calculate_join_probability(self, n):
-        a = 1.7
-        prob = 0.03 + 0.7 * (1 - math.e**(-a * n))
+        a = 2.1
+        prob = 0.03 + 0.45 * (1 - math.e**(-a * n))
         # print(prob)
         return prob
     
     def _calculate_leave_probability(self, n):
-        a = 0.7
-        b = 2.8
+        a = 0.85
+        b = 2.4
         prob = a * math.e**(-b * n)
         # print(prob)
         return prob
@@ -98,11 +98,11 @@ config = Config()
 x, y = config.window.as_tuple()
 
 site = Image.open('images/circle.png')
-site = site.resize((200,200))
+site = site.resize((150,150))
 site.save('images/circle_resized.png')
 
 site = Image.open('images/circle.png')
-site = site.resize((100, 100))
+site = site.resize((150, 150))
 site.save('images/circle_resized2.png')
 
 (
@@ -113,8 +113,8 @@ site.save('images/circle_resized2.png')
             radius=50
         )
     )
-    .spawn_site("images/circle_resized.png", x // 1.5, y // 2)
-    .spawn_site("images/circle_resized2.png", x // 4, y // 2)
+    .spawn_site("images/circle_resized.png", 250.5, y // 2)
+    .spawn_site("images/circle_resized2.png", 500, y // 2)
     .batch_spawn_agents(50, Cockroach, ["images/white.png", "images/red.png"])
     .run()
 )
