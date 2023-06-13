@@ -20,15 +20,15 @@ class Cockroach(Agent):
         self.left_on_tick = float('inf')
     
     def _calculate_join_probability(self, n):
-        a = 2.1
+        a = 1.2
         prob = 0.03 + 0.45 * (1 - math.e**(-a * n))
         # print(prob)
         return prob
     
     def _calculate_leave_probability(self, n):
-        a = 0.85
-        b = 2.4
-        prob = a * math.e**(-b * n)
+        a = 0.82
+        b = 2.1
+        prob = a * math.e**(-b * n) + 0.03
         # print(prob)
         return prob
 
