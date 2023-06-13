@@ -6,6 +6,7 @@ from vi import Simulation, Agent
 from vi.config import Config, dataclass, deserialize
 from vi.simulation import HeadlessSimulation
 import random
+import math
 
 class Cockroach(Agent):
     def __init__(self, images: list[Surface], simulation: HeadlessSimulation, pos: Vector2 | None = None, move: Vector2 | None = None):
@@ -14,13 +15,25 @@ class Cockroach(Agent):
         self.direction = self.move.normalize()
         self.velocity = simulation.config.movement_speed
 
+        self.check_interval = 50
+
         self.left_on_tick = float('inf')
     
+    def _calculate_join_probability(self, n):
+        a = 1.7
+        prob = 0.03 + 0.7 * (1 - math.e**(-a * n))
+        # print(prob)
+        return prob
+    
+    def _calculate_leave_probability(self, n):
+        a = 0.6
+        b = 5
+        prob = a * math.e**(-b * n)
+        print(prob)
+        return prob
+
     def update(self):
-        if self.in_proximity_accuracy().count() >= 1:
-            self.change_image(1)
-        else:
-            self.change_image(0)
+        num_neighbors = self.in_proximity_accuracy().count()
 
         if self.state == 'wandering':
             self.continue_movement()
@@ -35,16 +48,16 @@ class Cockroach(Agent):
                 self.state = 'wandering'
 
             # Join with some probability every 50 ticks
-            if self.shared.counter % 50 == 0:
-                if random.random() < 0.7:
+            if self.shared.counter % self.check_interval == 0:
+                if random.random() < self._calculate_join_probability(num_neighbors):
                     self.state = 'still'
         
         elif self.state == 'still':
             self.freeze_movement()
 
             # Enter leave state with some probability every 50 ticks
-            if self.shared.counter % 50 == 0:
-                if random.random() < 0.02:
+            if self.shared.counter % self.check_interval == 0:
+                if random.random() < self._calculate_leave_probability(num_neighbors):
                     self.left_tick = self.shared.counter
                     self.state = 'leave'
         
@@ -82,20 +95,25 @@ class Cockroach(Agent):
 config = Config()
 x, y = config.window.as_tuple()
 
-site = Image.open('PCI-Nexus/images/circle.png')
+site = Image.open('images/circle.png')
 site = site.resize((200,200))
-site.save('PCI-Nexus/images/circle_resized.png')
+site.save('images/circle_resized.png')
+
+site = Image.open('images/circle.png')
+site = site.resize((150, 150))
+site.save('images/circle_resized2.png')
 
 (
     Simulation(
         Config(
             image_rotation=False,
-            movement_speed=1,
+            movement_speed=2,
             radius=50
         )
     )
-    .spawn_site("PCI-Nexus/images/circle_resized.png", x // 2, y // 2)
-    .batch_spawn_agents(20, Cockroach, ["PCI-Nexus/images/white.png", "PCI-Nexus/images/red.png"])
+    .spawn_site("images/circle_resized.png", x // 1.5, y // 2)
+    .spawn_site("images/circle_resized2.png", x // 4, y // 2)
+    .batch_spawn_agents(40, Cockroach, ["images/white.png", "images/red.png"])
     .run()
 )
 
