@@ -26,10 +26,10 @@ class Cockroach(Agent):
         return prob
     
     def _calculate_leave_probability(self, n):
-        a = 0.6
-        b = 5
+        a = 0.7
+        b = 2.8
         prob = a * math.e**(-b * n)
-        print(prob)
+        # print(prob)
         return prob
 
     def update(self):
@@ -58,14 +58,16 @@ class Cockroach(Agent):
             # Enter leave state with some probability every 50 ticks
             if self.shared.counter % self.check_interval == 0:
                 if random.random() < self._calculate_leave_probability(num_neighbors):
-                    self.left_tick = self.shared.counter
+                    self.left_on_tick = self.shared.counter
                     self.state = 'leave'
         
         else:
             # Continue movement & don't enter wandering again for some number of ticks
             self.continue_movement()
             if self.shared.counter == self.left_on_tick + 500:
+                self.left_on_tick = float('inf')
                 self.state = 'wandering'
+        
             
 
 
@@ -100,20 +102,20 @@ site = site.resize((200,200))
 site.save('images/circle_resized.png')
 
 site = Image.open('images/circle.png')
-site = site.resize((150, 150))
+site = site.resize((100, 100))
 site.save('images/circle_resized2.png')
 
 (
     Simulation(
         Config(
             image_rotation=False,
-            movement_speed=2,
+            movement_speed=1.35,
             radius=50
         )
     )
     .spawn_site("images/circle_resized.png", x // 1.5, y // 2)
     .spawn_site("images/circle_resized2.png", x // 4, y // 2)
-    .batch_spawn_agents(40, Cockroach, ["images/white.png", "images/red.png"])
+    .batch_spawn_agents(50, Cockroach, ["images/white.png", "images/red.png"])
     .run()
 )
 
