@@ -2,7 +2,7 @@ from PIL import Image
 import pygame as pg
 from pygame.math import Vector2
 from pygame.surface import Surface
-from vi import Simulation, Agent
+from vi import Simulation, Agent, Metrics
 from vi.config import Config, dataclass, deserialize
 from vi.simulation import HeadlessSimulation
 import random
@@ -70,9 +70,6 @@ class Cockroach(Agent):
                 self.left_on_tick = float('inf')
                 self.state = 'wandering'
         
-            
-
-
     def change_position(self):
         if not self._moving:
             return
@@ -94,7 +91,7 @@ class Cockroach(Agent):
 
         self.move = self.direction * self.velocity
         self.pos += self.move
-    
+
 
 config = Config()
 x, y = config.window.as_tuple()
@@ -115,11 +112,12 @@ site.save('PCI-Nexus/images/circle_resized2.png')
             movement_speed=1.35,
             radius=50,
             fps_limit=600,
+            seed=682834
         )
     )
     .spawn_site("PCI-Nexus/images/circle_resized.png", 250, y // 2)
     .spawn_site("PCI-Nexus/images/circle_resized.png", 500, y // 2)
-    .batch_spawn_agents(80, Cockroach, ["PCI-Nexus/images/white.png", "PCI-Nexus/images/red.png"])
+    .batch_spawn_agents(1, Cockroach, ["PCI-Nexus/images/white.png", "PCI-Nexus/images/red.png"])
     .run()
 )
 
