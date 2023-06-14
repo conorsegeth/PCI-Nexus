@@ -2,11 +2,14 @@ from PIL import Image
 import pygame as pg
 from pygame.math import Vector2
 from pygame.surface import Surface
-from vi import Simulation, Agent, Metrics
-from vi.config import Config, dataclass, deserialize
+from vi import Simulation, Agent
+from vi.config import Config
 from vi.simulation import HeadlessSimulation
 import random
 import math
+import matplotlib.pyplot as plt
+import polars as pl
+import numpy as np
 
 class Cockroach(Agent):
     def __init__(self, images: list[Surface], simulation: HeadlessSimulation, pos: Vector2 | None = None, move: Vector2 | None = None):
@@ -35,6 +38,13 @@ class Cockroach(Agent):
         return prob
 
     def update(self):
+        self.save_data("state", self.state)
+        
+        site_id = -1 if self.on_site_id() == None else self.on_site_id()
+        if self.state == 'wandering':
+            site_id = -1
+        self.save_data("on_site_id", site_id)
+        
         num_neighbors = self.in_proximity_accuracy().count()
 
         if self.state == 'wandering':
@@ -93,6 +103,54 @@ class Cockroach(Agent):
         self.pos += self.move
 
 
+def plot_site_population(num_sites, snapshots):
+    lines = ['wandering']
+    for _ in range(num_sites):
+        lines.append('still')
+
+    # Create dataframe from metrics
+    df = snapshots.drop(['x', 'y', 'image_index'])
+
+    # Get x values for padding later
+    x_values = df.drop('id', 'state', 'on_site_id').groupby('frame', maintain_order=True).agg(pl.count('*'))['frame'].to_list()
+
+    # Calcualte frame range for padding later
+    arr = np.arange(0, max(x_values) + 1)
+    arr = arr.astype(np.int64)
+    frame_range = pl.DataFrame({'frame': arr})
+
+    # Group by frame, state & on_site_id and filter out all unneeded rows
+    grouped = df.groupby(["frame", "state", "on_site_id"], maintain_order=True).agg(pl.count("id").alias("count"))
+    filtered = grouped.filter(
+        ((pl.col('state') == 'wandering') | ((pl.col('state') == 'still') & (pl.col('on_site_id').is_in([0, 1]))))
+    )
+
+    # Create dataframes containting only information about wandering, still & on site 0, still & on site 1
+    for i, state in enumerate(lines):
+        if state == 'wandering':
+            line_df = filtered.filter((pl.col('state') == 'wandering') & (pl.col("on_site_id") == -1)).drop(['state', 'on_site_id'])
+        else:
+            line_df = filtered.filter((pl.col("state") == "still") & (pl.col("on_site_id") == i - 1)).drop(['state', 'on_site_id'])
+
+        # Create new df padded with 0s to fill frame count
+        line_df_padded = frame_range.join(line_df, on='frame', how='left').fill_null(0)
+
+        # Separate values for line to plot
+        line_values = line_df_padded['count'].to_list()
+
+        # Do the plots
+        if state == 'wandering':
+            plt.plot(x_values, line_values, label=f'{state}')
+        else:
+            plt.plot(x_values, line_values, label=f'{state}, on_site {i - 1}')
+    
+    plt.xlabel("Frame")
+    plt.ylabel("Count")
+    plt.title("Count by Frame")
+
+    plt.legend()
+    plt.show()
+
 config = Config()
 x, y = config.window.as_tuple()
 
@@ -105,19 +163,19 @@ site = site.resize((100,100))
 site.save('PCI-Nexus/images/circle_resized2.png')
 
 
-(
+metrics = (
     Simulation(
         Config(
             image_rotation=False,
             movement_speed=1.35,
             radius=50,
             fps_limit=600,
-            seed=682834
         )
     )
     .spawn_site("PCI-Nexus/images/circle_resized.png", 250, y // 2)
     .spawn_site("PCI-Nexus/images/circle_resized.png", 500, y // 2)
-    .batch_spawn_agents(1, Cockroach, ["PCI-Nexus/images/white.png", "PCI-Nexus/images/red.png"])
+    .batch_spawn_agents(100, Cockroach, ["PCI-Nexus/images/white.png", "PCI-Nexus/images/red.png"])
     .run()
 )
 
+plot_site_population(2, metrics.snapshots)
