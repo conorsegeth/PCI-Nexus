@@ -170,6 +170,7 @@ metrics = (
             movement_speed=1.35,
             radius=50,
             fps_limit=600,
+            duration=25000
         )
     )
     .spawn_site("PCI-Nexus/images/circle_resized.png", 250, y // 2)
