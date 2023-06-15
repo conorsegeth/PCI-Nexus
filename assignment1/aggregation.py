@@ -227,12 +227,10 @@ metrics = (
             duration=25000
         )
     )
-    .spawn_site("images/circle_resized3.png", 250, y // 3)
-    .spawn_site("images/circle_resized2.png", 500, y // 3)
     .spawn_site("images/circle_resized.png", 250, (y // 3) * 2)
-    # .spawn_site("images/circle_resized4.png", 500, (y // 3) * 2)
+    .spawn_site("images/circle_resized.png", 500, (y // 3) * 2)
     .batch_spawn_agents(100, Cockroach, ["images/white.png", "images/red.png"])
     .run()
 )
 
-plot_site_populations(3, metrics.snapshots)
+plot_site_populations(2, metrics.snapshots)
