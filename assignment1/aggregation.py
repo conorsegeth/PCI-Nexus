@@ -103,7 +103,49 @@ class Cockroach(Agent):
         self.pos += self.move
 
 
-def plot_site_population(num_sites, snapshots):
+def plot_wandering_vs_site_total(snapshots):
+    # Create dataframe from metrics
+    df = snapshots.drop(['x', 'y', 'image_index'])
+
+    # Only use data from every 50 frames
+    df = df.filter(
+        (pl.col('frame') % 50 == 0)
+    )
+
+    # Get x values for padding later
+    x_values = df.drop('id', 'state', 'on_site_id').groupby('frame', maintain_order=True).agg(pl.count('*'))['frame'].to_list()
+
+    # Calcualte frame range for padding later
+    arr = np.arange(0, max(x_values) + 1, step=50)
+    arr = arr.astype(np.int64)
+    frame_range = pl.DataFrame({'frame': arr})
+
+    # Group by frame, state & on_site_id and filter out all unneeded rows
+    grouped = df.groupby(["frame", "state"], maintain_order=True).agg(pl.count("id").alias("count"))
+    filtered = grouped.filter(
+        ((pl.col('state') == 'wandering') | ((pl.col('state') == 'still')))
+    )
+
+    df_wandering = filtered.filter((pl.col('state') == 'wandering')).drop(['state'])
+    df_still = filtered.filter((pl.col('state') == 'still')).drop(['state'])
+
+    df_wandering_padded = frame_range.join(df_wandering, on='frame', how='left').fill_null(0)
+    df_still_padded = frame_range.join(df_still, on='frame', how='left').fill_null(0)
+
+    wandering_values = df_wandering_padded['count'].to_list()
+    still_values = df_still_padded['count'].to_list()
+
+    plt.plot(x_values, wandering_values, label='wandering')
+    plt.plot(x_values, still_values, label='still')
+
+    plt.xlabel("Frame")
+    plt.ylabel("Count")
+    plt.title("Count by Frame")
+
+    plt.legend()
+    plt.show()
+
+def plot_site_populations(num_sites, snapshots):
     lines = ['wandering']
     for _ in range(num_sites):
         lines.append('still')
@@ -111,18 +153,23 @@ def plot_site_population(num_sites, snapshots):
     # Create dataframe from metrics
     df = snapshots.drop(['x', 'y', 'image_index'])
 
+    # Only use data from every 50 frames
+    df = df.filter(
+        (pl.col('frame') % 50 == 0)
+    )
+
     # Get x values for padding later
     x_values = df.drop('id', 'state', 'on_site_id').groupby('frame', maintain_order=True).agg(pl.count('*'))['frame'].to_list()
 
     # Calcualte frame range for padding later
-    arr = np.arange(0, max(x_values) + 1)
+    arr = np.arange(0, max(x_values) + 1, step=50)
     arr = arr.astype(np.int64)
     frame_range = pl.DataFrame({'frame': arr})
 
     # Group by frame, state & on_site_id and filter out all unneeded rows
     grouped = df.groupby(["frame", "state", "on_site_id"], maintain_order=True).agg(pl.count("id").alias("count"))
     filtered = grouped.filter(
-        ((pl.col('state') == 'wandering') | ((pl.col('state') == 'still') & (pl.col('on_site_id').is_in([0, 1]))))
+        ((pl.col('state') == 'wandering') | ((pl.col('state') == 'still') & (pl.col('on_site_id').is_in(range(num_sites)))))
     )
 
     # Create dataframes containting only information about wandering, still & on site 0, still & on site 1
@@ -154,14 +201,21 @@ def plot_site_population(num_sites, snapshots):
 config = Config()
 x, y = config.window.as_tuple()
 
-site = Image.open('PCI-Nexus/images/circle.png')
+site = Image.open('images/circle.png')
 site = site.resize((200,200))
-site.save('PCI-Nexus/images/circle_resized.png')
+site.save('images/circle_resized.png')
 
-site = Image.open('PCI-Nexus/images/circle.png')
-site = site.resize((100,100))
-site.save('PCI-Nexus/images/circle_resized2.png')
+site = Image.open('images/circle.png')
+site = site.resize((141,141))
+site.save('images/circle_resized2.png')
 
+site = Image.open('images/circle.png')
+site = site.resize((115,115))
+site.save('images/circle_resized3.png')
+
+site = Image.open('images/circle.png')
+site = site.resize((283,283))
+site.save('images/circle_resized4.png')
 
 metrics = (
     Simulation(
@@ -173,10 +227,12 @@ metrics = (
             duration=25000
         )
     )
-    .spawn_site("PCI-Nexus/images/circle_resized.png", 250, y // 2)
-    .spawn_site("PCI-Nexus/images/circle_resized.png", 500, y // 2)
-    .batch_spawn_agents(100, Cockroach, ["PCI-Nexus/images/white.png", "PCI-Nexus/images/red.png"])
+    .spawn_site("images/circle_resized3.png", 250, y // 3)
+    .spawn_site("images/circle_resized2.png", 500, y // 3)
+    .spawn_site("images/circle_resized.png", 250, (y // 3) * 2)
+    # .spawn_site("images/circle_resized4.png", 500, (y // 3) * 2)
+    .batch_spawn_agents(100, Cockroach, ["images/white.png", "images/red.png"])
     .run()
 )
 
-plot_site_population(2, metrics.snapshots)
+plot_site_populations(3, metrics.snapshots)
