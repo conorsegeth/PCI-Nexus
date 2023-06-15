@@ -103,7 +103,7 @@ class Cockroach(Agent):
         self.pos += self.move
 
 
-def plot_wandering_vs_site_total(snapshots):
+def plot_wandering_vs_site_total(snapshots, title):
     # Create dataframe from metrics
     df = snapshots.drop(['x', 'y', 'image_index'])
 
@@ -134,16 +134,18 @@ def plot_wandering_vs_site_total(snapshots):
 
     wandering_values = df_wandering_padded['count'].to_list()
     still_values = df_still_padded['count'].to_list()
+    
+    plt.clf()
 
     plt.plot(x_values, wandering_values, label='wandering')
     plt.plot(x_values, still_values, label='still')
 
     plt.xlabel("Frame")
     plt.ylabel("Count")
-    plt.title("Count by Frame")
+    plt.title(title)
 
     plt.legend()
-    plt.show()
+    plt.savefig(f'assignment1/graphs/{title}.png')
 
 def plot_site_populations(num_sites, snapshots):
     lines = ['wandering']
@@ -191,6 +193,8 @@ def plot_site_populations(num_sites, snapshots):
         else:
             plt.plot(x_values, line_values, label=f'{state}, on_site {i - 1}')
     
+    plt.clf()
+
     plt.xlabel("Frame")
     plt.ylabel("Count")
     plt.title("Count by Frame")
@@ -214,8 +218,16 @@ site = site.resize((115,115))
 site.save('images/circle_resized3.png')
 
 site = Image.open('images/circle.png')
-site = site.resize((283,283))
+site = site.resize((100,100))
 site.save('images/circle_resized4.png')
+
+site = Image.open('images/circle.png')
+site = site.resize((89,89))
+site.save('images/circle_resized5.png')
+
+site = Image.open('images/circle.png')
+site = site.resize((81,81))
+site.save('images/circle_resized6.png')
 
 metrics = (
     Simulation(
@@ -223,14 +235,114 @@ metrics = (
             image_rotation=False,
             movement_speed=1.35,
             radius=50,
-            fps_limit=600,
-            duration=25000
+            fps_limit=144,
+            duration=20000,
         )
     )
-    .spawn_site("images/circle_resized.png", 250, (y // 3) * 2)
-    .spawn_site("images/circle_resized.png", 500, (y // 3) * 2)
+    .spawn_site("images/circle_resized.png", x // 2, y // 2)
+    .batch_spawn_agents(100, Cockroach, ["images/white.png"])
+    .run()
+)
+
+plot_wandering_vs_site_total(metrics.snapshots, 'Single Site (Size 200)')
+
+metrics = (
+    Simulation(
+        Config(
+            image_rotation=False,
+            movement_speed=1.35,
+            radius=50,
+            fps_limit=6000,
+            duration=20000,
+        )
+    )
+    .spawn_site("images/circle_resized2.png", 225, y // 2)
+    .spawn_site("images/circle_resized2.png", 525, y // 2)
     .batch_spawn_agents(100, Cockroach, ["images/white.png", "images/red.png"])
     .run()
 )
 
-plot_site_populations(2, metrics.snapshots)
+plot_wandering_vs_site_total(metrics.snapshots, 'Two Sites (Size 141)')
+
+metrics = (
+    Simulation(
+        Config(
+            image_rotation=False,
+            movement_speed=1.35,
+            radius=50,
+            fps_limit=6000,
+            duration=20000,
+        )
+    )
+    .spawn_site("images/circle_resized3.png", 200, 550)
+    .spawn_site("images/circle_resized3.png", 550, 550)
+    .spawn_site("images/circle_resized3.png", x // 2, 200)
+    .batch_spawn_agents(100, Cockroach, ["images/white.png", "images/red.png"])
+    .run()
+)
+
+plot_wandering_vs_site_total(metrics.snapshots, 'Three Sites (Size 115)')
+
+metrics = (
+    Simulation(
+        Config(
+            image_rotation=False,
+            movement_speed=1.35,
+            radius=50,
+            fps_limit=6000,
+            duration=20000,
+        )
+    )
+    .spawn_site("images/circle_resized4.png", 200, 200)
+    .spawn_site("images/circle_resized4.png", 550, 200)
+    .spawn_site("images/circle_resized4.png", 200, 550)
+    .spawn_site("images/circle_resized4.png", 550, 550)
+    .batch_spawn_agents(100, Cockroach, ["images/white.png", "images/red.png"])
+    .run()
+)
+
+
+plot_wandering_vs_site_total(metrics.snapshots, 'Four Sites (Size 100)')
+
+metrics = (
+    Simulation(
+        Config(
+            image_rotation=False,
+            movement_speed=1.35,
+            radius=50,
+            fps_limit=6000,
+            duration=20000,
+        )
+    )
+    .spawn_site("images/circle_resized5.png", 175, 175)
+    .spawn_site("images/circle_resized5.png", 575, 175)
+    .spawn_site("images/circle_resized5.png", 175, 575)
+    .spawn_site("images/circle_resized5.png", 575, 575)
+    .spawn_site("images/circle_resized5.png", x // 2, y // 2)
+    .batch_spawn_agents(100, Cockroach, ["images/white.png", "images/red.png"])
+    .run()
+)
+
+plot_wandering_vs_site_total(metrics.snapshots, 'Five Sites (Size 89)')
+
+metrics = (
+    Simulation(
+        Config(
+            image_rotation=False,
+            movement_speed=1.35,
+            radius=50,
+            fps_limit=6000,
+            duration=20000,
+        )
+    )
+    .spawn_site("images/circle_resized6.png", 200, 150)
+    .spawn_site("images/circle_resized6.png", 550, 150)
+    .spawn_site("images/circle_resized6.png", 200, y // 2)
+    .spawn_site("images/circle_resized6.png", 550, y // 2)
+    .spawn_site("images/circle_resized6.png", 200, 600)
+    .spawn_site("images/circle_resized6.png", 550, 600)
+    .batch_spawn_agents(100, Cockroach, ["images/white.png", "images/red.png"])
+    .run()
+)
+
+plot_wandering_vs_site_total(metrics.snapshots, 'Six Sites (Size 81)')
