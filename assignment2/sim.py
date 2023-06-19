@@ -1,20 +1,7 @@
-from vi import Simulation, Window
-from vi.config import Config
-from predator import Predator
-from prey import Prey
+from pygame import Vector2
+from vi import Simulation
 
-if __name__ == '__main__':
-    window = Window(960, 540)
-
-    (
-        Simulation(
-            Config(
-                window=window,
-                image_rotation=True,
-            )
-        )
-        .batch_spawn_agents(20, Predator, ['images/bird.png'])
-        .batch_spawn_agents(50, Prey, ['images/green.png'])
-        .run()
-    )
-
+class MySimulation(Simulation):
+    def spawn_agent(self, agent_class, images: list[str], x_pos: float, y_pos: float):
+        agent_class(images=self._load_images(images), simulation=self, pos=Vector2((x_pos, y_pos)))
+        return self
