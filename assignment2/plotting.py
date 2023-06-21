@@ -39,7 +39,7 @@ def plot_population_sizes(snapshots: pl.DataFrame, timestep_frame_interval: int)
     plt.plot(x_values, prey_values, label='Prey')
     plt.plot(x_values, predator_values, label='Predators')
 
-    plt.xlabel('time')
+    plt.xlabel('time (seconds)')
     plt.ylabel('population')
     plt.title('Population vs Time')
     plt.legend()
