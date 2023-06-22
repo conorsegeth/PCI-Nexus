@@ -1,6 +1,6 @@
 from vi import Window, Config
 from sim import MySimulation
-from agents import Predator, Prey, predatorImages, preyImages, TIMESTEP_INTERVAL
+from agents import Predator, PredatorWithEnergy, Prey, predatorImages, preyImages, TIMESTEP_INTERVAL
 from plotting import plot_population_sizes
 
 
@@ -17,7 +17,7 @@ if __name__ == '__main__':
                 radius=50,
             )
         )
-        .batch_spawn_agents(25, Predator, predatorImages)
+        .batch_spawn_agents(15, PredatorWithEnergy, predatorImages)
         .batch_spawn_agents(110, Prey, preyImages)
         .run()
     )
