@@ -3,21 +3,31 @@ import random
 from typing import Tuple
 from pygame.math import Vector2
 from pygame.surface import Surface
-from vi import Agent, ProximityIter
-from sim import MySimulation
+from vi import Agent, ProximityIter, Simulation
 
 predatorImages = ['images/foxsmolish.png']
 preyImages = ['images/rabbitsmol.png']
 
-EAT_DISTANCE = 12
+EAT_DISTANCE = 10
 TIMESTEP_INTERVAL = 6  # 0.1 seconds (assuming 60fps)
 
 
 class MyBaseAgent(Agent):
-    def __init__(self, images: list[Surface], simulation: MySimulation, pos: Vector2 | None = None,
+    def __init__(self, images: list[Surface], simulation: Simulation, pos: Vector2 | None = None,
                  move: Vector2 | None = None):
         super().__init__(images, simulation, pos, move)
         self.simulation = simulation
+        
+        self.energy = 100
+        self.energy_consumption = 0.25
+
+        self.ate = self.shared.counter
+
+    def update(self):
+        if self.shared.counter % TIMESTEP_INTERVAL == 0:
+            self.energy -= self.energy_consumption
+            if self.energy <= 0:
+                self.kill()
 
     # Basic random movement for base class (could override later in prey/predator class to give unique movement)
     def change_position(self):
@@ -39,26 +49,55 @@ class MyBaseAgent(Agent):
         self.pos += self.move
 
 
-class Prey(MyBaseAgent):
-    def __init__(self, images: list[Surface], simulation: MySimulation, pos: Vector2 | None = None,
-                 move: Vector2 | None = None):
-        super().__init__(images, simulation, pos, move)
-        self.simulation = simulation
+class Grass(MyBaseAgent):
+    def update(self):
+        self.save_data('type', 'Grass')
 
+    def change_position(self):
+        pass
+
+
+PREY_EAT_COOLDOWN = 30
+PREY_ENERGY_REGAIN = 15
+PREY_REPRODUCTION_CHANCE = 0.8
+
+class Prey(MyBaseAgent):
     def update(self):
         self.save_data('type', 'Prey')
 
-        # Only perform actions every timestep : random chance to reproduce
-        if self.shared.counter % TIMESTEP_INTERVAL == 0 and random.random() < 0.006:  # 0.008
-            self.reproduce()
-            # print("split")
+        super().update()
+
+        # Only perform actions every timestep
+        if self.shared.counter % TIMESTEP_INTERVAL == 0:  
+            self._reset_ate()
+
+            neighbors = self.in_proximity_accuracy()
+            for neighbor, distance in neighbors:
+                if self._can_eat(neighbor, distance):
+                    self.eat(neighbor)
+
+                    if random.random() < PREY_REPRODUCTION_CHANCE:
+                        self.reproduce()
+
+    def _reset_ate(self):
+        if self.shared.counter > self.ate + PREY_EAT_COOLDOWN:
+            self.ate = -float('inf')
+
+    def _can_eat(self, agent, distance):
+        if isinstance(agent, Grass) and distance < EAT_DISTANCE and self.ate < 0:
+            return True
+        return False
+
+    def eat(self, agent):
+        agent.kill()
+        self.ate = self.shared.counter
+        self.energy = min(100, self.energy + PREY_ENERGY_REGAIN)
 
 
 class Predator(MyBaseAgent):
-    def __init__(self, images: list[Surface], simulation: MySimulation, pos: Vector2 | None = None,
+    def __init__(self, images: list[Surface], simulation: Simulation, pos: Vector2 | None = None,
                  move: Vector2 | None = None):
         super().__init__(images, simulation, pos, move)
-        self.simulation = simulation
         self.ate = -float('inf')
 
     def update(self):
@@ -88,10 +127,9 @@ class Predator(MyBaseAgent):
 
 
 class PredatorWithEnergy(Predator):
-    def __init__(self, images: list[Surface], simulation: MySimulation, pos: Vector2 | None = None,
+    def __init__(self, images: list[Surface], simulation: Simulation, pos: Vector2 | None = None,
                  move: Vector2 | None = None):
         super().__init__(images, simulation, pos, move)
-        self.energy = 100
 
     def update(self):
         self.save_data('type', 'Predator')
@@ -103,7 +141,7 @@ class PredatorWithEnergy(Predator):
                 self.kill()
 
             # If predator ate more than some amount of frames ago, let it eat again
-            if self.shared.counter > self.ate + 15:
+            if self.shared.counter > self.ate + 30:
                 self.ate = -float('inf')
 
             neighbors = self.in_proximity_accuracy()
@@ -115,7 +153,7 @@ class PredatorWithEnergy(Predator):
                     self.ate = self.shared.counter
 
                     # Chance to spawn another predator after eating
-                    if random.random() < 0.045:
+                    if random.random() < 0.075:
                         self.reproduce()
                         # print("ate a mf")
 
@@ -124,7 +162,7 @@ class PredatorWithEnergy(Predator):
                 self.kill()
 
     def _calculate_death_probability(self, energy: float) -> float:
-        a = 0.4
+        a = 0.1
         prob = math.e ** (-a * energy)
         return prob
 
@@ -143,7 +181,7 @@ class PredatorWithEnergy(Predator):
             self.direction += 0.03 * targetDir
             self.direction = self.direction.normalize()
         else:
-            if random.random() < 0.01:
+            if random.random() < 0.1:
                 self.direction = Vector2(
                     random.uniform(self.direction.x - 0.35, self.direction.x + 0.35),
                     random.uniform(self.direction.y - 0.35, self.direction.y + 0.35)
