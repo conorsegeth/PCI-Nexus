@@ -19,6 +19,7 @@ if __name__ == '__main__':
                 print_fps=False,
                 radius=25,
                 seed=config.seed,
+                duration=36000
             )
         )
         .spawn_grass_patches(5, 10, 'images/circle_resized.png')

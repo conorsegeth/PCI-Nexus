@@ -3,7 +3,7 @@ import random
 from PIL import Image
 from typing import Optional, Type
 from pygame import Vector2
-from vi import Simulation
+from vi import HeadlessSimulation, Simulation
 from vi.config import Config, dataclass, deserialize
 from vi.metrics import Metrics
 
