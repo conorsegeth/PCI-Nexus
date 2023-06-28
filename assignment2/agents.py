@@ -52,6 +52,8 @@ class MyBaseAgent(Agent):
 class Grass(MyBaseAgent):
     def update(self):
         self.save_data('type', 'Grass')
+        if hasattr(self.simulation, "seasons"):
+            self.save_data('season', list(self.simulation.seasons.keys())[self.simulation.season_idx])
 
     def change_position(self):
         pass
@@ -64,6 +66,8 @@ PREY_REPRODUCTION_CHANCE = 0.8
 class Prey(MyBaseAgent):
     def update(self):
         self.save_data('type', 'Prey')
+        if hasattr(self.simulation, "seasons"):
+            self.save_data('season', list(self.simulation.seasons.keys())[self.simulation.season_idx])
 
         super().update()
 
@@ -133,6 +137,8 @@ class PredatorWithEnergy(Predator):
 
     def update(self):
         self.save_data('type', 'Predator')
+        if hasattr(self.simulation, "seasons"):
+            self.save_data('season', list(self.simulation.seasons.keys())[self.simulation.season_idx])
 
         # Only perform actions every timestep
         if self.shared.counter % TIMESTEP_INTERVAL == 0:

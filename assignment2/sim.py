@@ -2,6 +2,7 @@ import math
 import random
 from PIL import Image
 from typing import Optional, Type
+import pygame as pg
 from pygame import Vector2
 from vi import HeadlessSimulation, Simulation
 from vi.config import Config, dataclass, deserialize
@@ -21,6 +22,10 @@ def perturb_point_within_radius(x, y, radius):
     
     return new_x, new_y
 
+def overlap(pos1, pos2, img):
+    img_width, img_height = img.size
+    dist = math.sqrt((pos2.x - pos1.x)**2 + (pos2.y - pos1.y)**2)
+    return True if dist < img_width or dist < img_height else False
 
 @deserialize
 @dataclass
@@ -28,13 +33,14 @@ class MyConfig(Config):
     seed = random.randint(0, 999999999)
     print(seed)
     
-GROW_RATE = 0.025
+GROW_RATE = 0.018 # 0.025
 GROW_RADIUS = 70
 
 class MySimulation(Simulation):
     def __init__(self, grass_agent, config: Config | None = None):
         super().__init__(config)
         self.grass_agent = grass_agent
+        self.grow_rate = GROW_RATE
 
     def spawn_agent(self, agent_class, images, pos_x, pos_y):
         
@@ -46,9 +52,9 @@ class MySimulation(Simulation):
         super().before_update()
 
         for i, pos in enumerate(self.patches):
-            if random.random() < GROW_RATE:
+            if random.random() < self.grow_rate:
                 x, y = perturb_point_within_radius(pos.x, pos.y, GROW_RADIUS)
-                self.spawn_agent(self.grass_agent, ['images/green.png'], x, y)
+                self.spawn_agent(self.grass_agent, ['images/grass_icon.png'], x, y)
         
 
     def spawn_grass_patches(self, num_patches, min_distance, img_path):
@@ -71,17 +77,38 @@ class MySimulation(Simulation):
                     
                 attempt += 1
         
-        for i, patch in enumerate(self.patches):
-            self.spawn_site(img_path, patch.x, patch.y)
+        # for i, patch in enumerate(self.patches):
+        #     self.spawn_site(img_path, patch.x, patch.y)
         
         return self
 
-def overlap(pos1, pos2, img):
-    img_width, img_height = img.size
-    dist = math.sqrt((pos2.x - pos1.x)**2 + (pos2.y - pos1.y)**2)
-    return True if dist < img_width or dist < img_height else False
+
+SEASON_LENGTH = 7200
+
+
+class MySeasonalSimulation(MySimulation):
+    def __init__(self, grass_agent, config: Config | None = None):
+        super().__init__(grass_agent, config)
+        self.seasons = {'spring': GROW_RATE / 1.8, 'summer': GROW_RATE, 'autumn': GROW_RATE / 2.1, 'winter': GROW_RATE / 3}
+        self.season_idx = 0
+    
+    def before_update(self): 
+        if self.shared.counter % SEASON_LENGTH == 0:
+            self.season_idx = (self.season_idx + 1) % 4
+            self.grow_rate = list(self.seasons.values())[self.season_idx]
+        super().before_update()
+
+    def after_update(self):
+        font = pg.font.Font(None, 32)
+        text = font.render(list(self.seasons.keys())[self.season_idx], True, 'white')
+        self._screen.blit(text, (50, 50)) 
+        super().after_update()
+
+    def run(self) -> Metrics:
+        pg.font.init()
+        return super().run()
 
 if __name__ == '__main__':
-    img = Image.open('images/circle.png')
-    img = img.resize((150, 150))
-    img.save('images/circle_resized.png')
+    img = Image.open('images/grass_icon.png')
+    img = img.resize((20, 20))
+    img.save('images/grass_icon.png')
