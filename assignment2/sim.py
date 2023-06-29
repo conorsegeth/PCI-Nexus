@@ -36,7 +36,7 @@ class MyConfig(Config):
 GROW_RATE = 0.018 # 0.025
 GROW_RADIUS = 70
 
-class MySimulation(Simulation):
+class MySimulation(HeadlessSimulation):
     def __init__(self, grass_agent, config: Config | None = None):
         super().__init__(config)
         self.grass_agent = grass_agent
@@ -92,7 +92,7 @@ SEASON_LENGTH = 7200
 class MySeasonalSimulation(MySimulation):
     def __init__(self, grass_agent, config: Config | None = None):
         super().__init__(grass_agent, config)
-        self.seasons = {'spring': GROW_RATE / 1.8, 'summer': GROW_RATE, 'autumn': GROW_RATE / 2.1, 'winter': GROW_RATE / 3}
+        self.seasons = {'spring': GROW_RATE / 1.75, 'summer': GROW_RATE, 'autumn': GROW_RATE / 2.25, 'winter': GROW_RATE / 3}
         self.season_idx = 0
     
     def before_update(self): 
@@ -102,9 +102,9 @@ class MySeasonalSimulation(MySimulation):
         super().before_update()
 
     def after_update(self):
-        font = pg.font.Font(None, 32)
-        text = font.render(list(self.seasons.keys())[self.season_idx], True, 'white')
-        self._screen.blit(text, (50, 50)) 
+        # font = pg.font.Font(None, 32)
+        # text = font.render(list(self.seasons.keys())[self.season_idx], True, 'white')
+        # self._screen.blit(text, (50, 50)) 
         super().after_update()
 
     def run(self) -> Metrics:

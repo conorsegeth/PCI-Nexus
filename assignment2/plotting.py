@@ -95,7 +95,7 @@ def plot_population_sizes_with_seasons(snapshots: pl.DataFrame, timestep_frame_i
         colors = ['yellow', 'orange', 'lightblue', 'springgreen']
         if i == 0 and len(season_changes) > 1:
             idx = np.where(x_values == season_changes[1])
-            plt.fill_between(x_values[0: idx[0][0]], 0, max(max(prey_values), max(predator_values)), color=colors[i % 4], alpha=0.25)
+            plt.fill_between(x_values[0: idx[0][0]], 0, max(max(prey_values), max(predator_values), max(grass_values)), color=colors[i % 4], alpha=0.25)
         elif i < len(season_changes) - 1:
             idx1 = np.where(x_values == season_changes[i])
             idx2 = np.where(x_values == season_changes[i + 1])

@@ -48,7 +48,7 @@ def run_seasonal_simulation():
                 print_fps=False,
                 radius=25,
                 seed=config.seed,
-                duration=7200 * 8
+                duration=SEASON_LENGTH * 4
             )
         )
         .spawn_grass_patches(5, 10, 'images/circle_resized.png')
@@ -65,3 +65,4 @@ if __name__ == '__main__':
 
     print_avg_pop_size_per_season(metrics.snapshots, TIMESTEP_INTERVAL)
     plot_population_sizes_with_seasons(metrics.snapshots, TIMESTEP_INTERVAL, SEASON_LENGTH)
+ 
