@@ -9,6 +9,8 @@ def run_grass_only_simulation():
 
     config = MyConfig()
 
+    # GOOD SEED: 472220471
+    # This shit lowkey just runs infinitely I stg: 114300533
     metrics = (
         MySimulation(
             Grass,
@@ -61,9 +63,5 @@ def run_seasonal_simulation():
 if __name__ == '__main__':
     metrics = run_seasonal_simulation()
 
-    plot_population_sizes_with_seasons(metrics.snapshots, TIMESTEP_INTERVAL, SEASON_LENGTH)
     print_avg_pop_size_per_season(metrics.snapshots, TIMESTEP_INTERVAL)
-
-
-    # GOOD SEED: 472220471
-    # This shit lowkey just runs infinitely I stg: 114300533
+    plot_population_sizes_with_seasons(metrics.snapshots, TIMESTEP_INTERVAL, SEASON_LENGTH)

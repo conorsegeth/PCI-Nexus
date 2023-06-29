@@ -79,6 +79,9 @@ class MySimulation(Simulation):
         
         # for i, patch in enumerate(self.patches):
         #     self.spawn_site(img_path, patch.x, patch.y)
+        for i, pos in enumerate(self.patches):
+            x, y = perturb_point_within_radius(pos.x, pos.y, GROW_RADIUS)
+            self.spawn_agent(self.grass_agent, ['images/grass_icon.png'], x, y)
         
         return self
 
