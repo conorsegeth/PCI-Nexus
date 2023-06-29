@@ -36,7 +36,7 @@ class MyConfig(Config):
 GROW_RATE = 0.018 # 0.025
 GROW_RADIUS = 70
 
-class MySimulation(Simulation):
+class MySimulation(HeadlessSimulation):
     def __init__(self, grass_agent, config: Config | None = None):
         super().__init__(config)
         self.grass_agent = grass_agent
@@ -102,9 +102,9 @@ class MySeasonalSimulation(MySimulation):
         super().before_update()
 
     def after_update(self):
-        font = pg.font.Font(None, 32)
-        text = font.render(list(self.seasons.keys())[self.season_idx], True, 'white')
-        self._screen.blit(text, (50, 50)) 
+        # font = pg.font.Font(None, 32)
+        # text = font.render(list(self.seasons.keys())[self.season_idx], True, 'white')
+        # self._screen.blit(text, (50, 50)) 
         super().after_update()
 
     def run(self) -> Metrics:

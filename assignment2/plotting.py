@@ -113,11 +113,12 @@ def plot_population_sizes_with_seasons(snapshots: pl.DataFrame, timestep_frame_i
 
 def print_avg_pop_size_per_season(snapshots: pl.DataFrame, timestep_frame_interval: int) -> None:
     df = snapshots.drop(['x', 'y', 'image_index', 'angle'])
+    df = df.filter((pl.col('frame') % timestep_frame_interval == 0))
     
     grouped = df.groupby(['frame', 'type', 'season'], maintain_order=True).agg(pl.count('id').alias('count'))
     
     timesteps = df.groupby('frame', maintain_order=True).agg(pl.count('*'))['frame'].to_list()
-    arr = np.arange(0, max(timesteps) + 1)
+    arr = np.arange(0, max(timesteps) + 1, step=timestep_frame_interval)
     arr = arr.astype(np.int64)
     frame_range = pl.DataFrame({'frame': arr})
 
